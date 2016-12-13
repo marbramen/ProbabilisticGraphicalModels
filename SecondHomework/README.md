@@ -16,6 +16,7 @@ Execute:
 Part 2
 Execute:
 	python P2_vitterbi.py gene.count gene.dev 0 > gene_dev.p2.out
+	
 	python eval_gene_tagger.py gene.key gene_dev.p2.out
 		Found 373 GENEs. Expected 642 GENEs; Correct: 202.
 
@@ -24,9 +25,12 @@ Execute:
 	
 Part 3
 Execute:
-	python P3_gen_new_classes.py gene.train > gene_4CLASS.trai
+	python P3_gen_new_classes.py gene.train > gene_4CLASS.train
+	
 	python count_freqs.py gene_4CLASS.train > gene_4CLASS.count
+	
 	python P2_vitterbi.py gene_4CLASS.count gene.dev 1 > gene_dev.p3.out
+	
 	python eval_gene_tagger.py gene.key gene_dev.p3.out 
 		Found 404 GENEs. Expected 642 GENEs; Correct: 219.
 
