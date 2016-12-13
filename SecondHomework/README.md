@@ -2,8 +2,11 @@
 Part 1 
 Execute:
  	python P1_gen_rare.py gene.train > gene_RARE.train
+	
 	python count_freqs.py gene_RARE.train > gene.count
+	
 	python P1_emission_tag.py gene.dev > gene_dev.p1.out
+	
 	python eval_gene_tagger.py gene.key gene_dev.p1.out
 		Found 2669 GENEs. Expected 642 GENEs; Correct: 424.
 
