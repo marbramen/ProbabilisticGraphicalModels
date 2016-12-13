@@ -85,32 +85,23 @@ class Hmm(object):
         self.emission_counts = defaultdict(int)
         self.ngram_counts = [defaultdict(int) for i in xrange(self.n)]
         self.all_states = set()
-        self.all_tags = list()
 
     def train(self, corpus_file):
         """
         Count n-gram frequencies and emission probabilities from a corpus file.
-        """            
-        #inicialize HMM
-        self.__init__(self.n)
-            
+        """
         ngram_iterator = \
             get_ngrams(sentence_iterator(simple_conll_corpus_iterator(corpus_file)), self.n)
-                
-        set_all_tags = set()    
+
         for ngram in ngram_iterator:
-            #Sanity check: n-gram we get from the corpus stream needs to have the right length                    
-            assert len(ngram) == self.n, "ngram in stream is %i, expected %i" % (len(ngram, self.n))                                              
-            tagsonly = tuple([ne_tag for word, ne_tag in ngram]) #retrieve only the tags                        
+            #Sanity check: n-gram we get from the corpus stream needs to have the right length
+            assert len(ngram) == self.n, "ngram in stream is %i, expected %i" % (len(ngram, self.n))
 
-            # save the tags                
-            for i in xrange(0, self.n):                    
-                set_all_tags.add(tagsonly[i])
-                    
-            for i in xrange(2, self.n +1): #Count NE-tag 2-grams..n-grams 
+            tagsonly = tuple([ne_tag for word, ne_tag in ngram]) #retrieve only the tags            
+            for i in xrange(2, self.n+1): #Count NE-tag 2-grams..n-grams
                 self.ngram_counts[i-1][tagsonly[-i:]] += 1
-
-            if ngram[-1][0] is not None: # If this is not the last word in a sentence                
+            
+            if ngram[-1][0] is not None: # If this is not the last word in a sentence
                 self.ngram_counts[0][tagsonly[-1:]] += 1 # count 1-gram
                 self.emission_counts[ngram[-1]] += 1 # and emission frequencies
 
@@ -118,20 +109,16 @@ class Hmm(object):
             if ngram[-2][0] is None: # this is the first n-gram in a sentence
                 self.ngram_counts[self.n - 2][tuple((self.n - 1) * ["*"])] += 1
 
-        # pass tags set -> list                
-        self.all_tags = list(set_all_tags)    
-        corpus_file.close()
-                                
-                                    
     def write_counts(self, output, printngrams=[1,2,3]):
         """
         Writes counts to the output file object.
         Format:
 
-        """        
+        """
         # First write counts for emissions
         for word, ne_tag in self.emission_counts:            
             output.write("%i WORDTAG %s %s\n" % (self.emission_counts[(word, ne_tag)], ne_tag, word))
+
 
         # Then write counts for all ngrams
         for n in printngrams:            
@@ -159,23 +146,8 @@ class Hmm(object):
                 ngram = tuple(parts[2:])
                 self.ngram_counts[n-1][ngram] = count
                 
-    def gen_rare_words(self, corpus_file, output, occurre, word_rare):                    
-        for line_file in corpus_file:
-            line = line_file.strip()
-            if line:
-                fields = line.split(" ")
-                cant = 0
-                for i in xrange(0, self.all_tags.__len__()):                    
-                    cant += self.emission_counts[(fields[0],self.all_tags[i])]                                                                                    
-                if cant < occurre:
-                    output.write("%s %s\n"%(word_rare, fields[1]))
-                else:
-                    output.write(line + "\n")   
-            else:
-                output.write(line_file)     
-        output.close()
-        corpus_file.close()                                                                 
-                                         
+
+
 def usage():
     print """
     python count_freqs.py [input_file] > [output_file]
@@ -188,13 +160,8 @@ if __name__ == "__main__":
         usage()
         sys.exit(2)
 
-    try:                
-        inputNameFile = sys.argv[1]
-        inputFitNameFile = sys.argv[1] + "_fit"
-        input_train = file(inputNameFile,"r")
-        input_train_2 = file(inputNameFile, "r")        
-        input_fit_train = file(inputFitNameFile, "w")        
-        input_fit_train_2 = file(inputFitNameFile, "r")    
+    try:
+        input = file(sys.argv[1],"r")
     except IOError:
         sys.stderr.write("ERROR: Cannot read inputfile %s.\n" % arg)
         sys.exit(1)
@@ -202,12 +169,6 @@ if __name__ == "__main__":
     # Initialize a trigram counter
     counter = Hmm(3)
     # Collect counts
-    counter.train(input_train)
-    # Generate new data Train for emission parameters
-    counter.gen_rare_words(input_train_2, input_fit_train, 5, "_RARE_")
-    # Collect counts from new data Train for emission parameterss    
-    counter.train(input_fit_train_2)
+    counter.train(input)
     # Write the counts
     counter.write_counts(sys.stdout)
-    
-    
